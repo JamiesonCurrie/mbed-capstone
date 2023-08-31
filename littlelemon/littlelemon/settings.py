@@ -78,6 +78,18 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+    },
+    'littlelemondb': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'littlelemondb',
+        'USER': 'admindjango',
+        'PASSWORD': 'employee@123!',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+        'OPTIONS': {
+            #'read_default_file': BASE_DIR + '/mysql.cnf',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+        }
     }
 }
 
