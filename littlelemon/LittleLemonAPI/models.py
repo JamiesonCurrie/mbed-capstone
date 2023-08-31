@@ -20,7 +20,7 @@ class MenuItem(models.Model):
   inventory = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(99999)])
 
   def __str__(self)->str:
-    return '(' + str(self.category) + ') ' + self.title + ' : $' + str(self.price) + ' [' + self.featured + ']'
+    return '(' + str(self.category) + ') ' + self.title + ' : $' + str(self.price) + ' [' + self.featured + '] (' + self.inventory + ')'
 
 ###############################################################################
 
