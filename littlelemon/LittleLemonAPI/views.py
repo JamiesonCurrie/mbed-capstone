@@ -1,7 +1,8 @@
 from django.contrib.auth.models import User
-from django.shortcuts import render
-from rest_framework import viewsets, generics
-from rest_framework.permissions import IsAuthenticated
+
+from rest_framework import viewsets, generics, mixins, status
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
 
 from .models import Category, MenuItem, Booking
 from .serializers import UserSerializer, CategorySerializer, MenuItemSerializer, BookingSerializer
@@ -20,14 +21,30 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class MenuItemsView(generics.ListCreateAPIView):
   queryset         = MenuItem.objects.all()
   serializer_class = MenuItemSerializer
-  permission_classes = [IsAuthenticated]
+  permission_classes = [IsAuthenticatedOrReadOnly]
 
 class SingleMenuItemView(generics.RetrieveUpdateAPIView, generics.DestroyAPIView):
   queryset         = MenuItem.objects.all()
   serializer_class = MenuItemSerializer
-  permission_classes = [IsAuthenticated]
+  permission_classes = [IsAuthenticatedOrReadOnly]
 
-class BookingViewSet(viewsets.ModelViewSet):
+class BookingViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin):
   queryset         = Booking.objects.all()
   serializer_class = BookingSerializer
-  permission_classes = [IsAuthenticated]
+  permission_classes = [IsAuthenticatedOrReadOnly]
+
+  def retrieve(self, request, reservation_date=None):
+    split_date = reservation_date.split('-')
+    print(split_date)
+    bookings = self.get_queryset().filter(reservation_date__year=split_date[0], reservation_date__month=split_date[1], reservation_date__day=split_date[2])
+    if not bookings.exists():
+      return Response([], status=status.HTTP_204_NO_CONTENT)
+
+    page = self.paginate_queryset(bookings)
+    if page is not None:
+      serializer = self.get_serializer(page, many=True)
+      return self.get_paginated_response(serializer.data)
+
+    serializer = self.get_serializer(bookings, many=True)
+
+    return Response(serializer.data)

@@ -4,10 +4,10 @@
 </header>
 <nav>
   <ul>
-    <li><a href="{% url 'home' %}">Home</a></li>
-    <li><a href="{% url 'about' %}">About</a></li>
-    <li><a href="{% url 'menu' %}">Menu</a></li>
-    <!-- Add code here for the book template -->
-    <!-- Add code here for the reservations template -->
+    <li><a href="{% url 'restaurant:home' %}">Home</a></li>
+    <li><a href="{% url 'restaurant:about' %}">About</a></li>
+    <li><a href="{% url 'restaurant:menu' %}">Menu</a></li>
+    <li><a href="{% url 'restaurant:book' %}">Book</a></li>
+    <li><a href="{% url 'restaurant:tables' %}">Reservations</a></li>
   </ul>
 </nav>
