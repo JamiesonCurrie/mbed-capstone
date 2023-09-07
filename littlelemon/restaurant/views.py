@@ -1,14 +1,9 @@
 from django.shortcuts import render
 from django.core import serializers
 
-from rest_framework.response import Response
-
 from LittleLemonAPI.models import MenuItem, Booking
 
-
 from datetime import datetime
-#import json
-from .forms import BookingForm
 
 # Create your views here.
 
@@ -19,13 +14,7 @@ def about(request):
     return render(request, 'about.html')
 
 def book(request):
-  form = BookingForm()
-  if request.method == 'POST':
-    form = BookingForm(request.POST)
-    if form.is_valid():
-      form.save()
-  context = {'form':form}
-  return render(request, 'book.html', context)
+  return render(request, 'book.html')
 
 def bookings(request):
   date = request.GET.get('date',datetime.today().date())

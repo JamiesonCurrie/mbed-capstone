@@ -5,105 +5,106 @@
 <section>
   <article>
     <h1>Make a reservation</h1>
-    <!--Begin row-->
     <div class="row">
-      <!--Begin col-->
       <div class="column">
           {% csrf_token %}
-          <form method="POST" id="form">
-            <!-- {% csrf_token %} -->
+          <form action="{% url 'littlelemon-api:bookings' %}" method="POST" id="form">
             <p>
               <label for="name">Name:</label>
-              <input type="text" placeholder="Your Name" maxlength="200" required="" id="name">
+              <input
+                type='text'
+                id='name'
+                name='name'
+                placeholder="Your Name"
+                maxlength="200"
+                required=""
+              >
             </p>
             <p>
-            <!-- Step 9: Part one -->
               <label for="reservation_date">Reservation Date:</label>
-              <input type="date" placeholder="Select a Date" required="" id="reservation_date">
+              <input type="date" placeholder="Select a Date" required="" id="reservation_date" name='reservation_date'>
             </p>
             <p>
-                <label for="no_of_guests">Number of Guests</label>
-                <input type="range" min=1 max=10 placeholder="Number of Guests" required="" id="no_of_guests">
-              </p>
+              <label id="no_of_guests_val" for="no_of_guests">Number of Guests: 2</label>
+              <input
+                type="range"
+                value=2
+                min=1
+                max=10
+                placeholder="Number of Guests"
+                required=""
+                id="no_of_guests"
+                name='no_of_guests'
+                oninput="document.getElementById('no_of_guests_val').innerHTML = 'Number of Guests: ' + this.value;"
+              >
+            </p>
             <p>
               <label for="reservation_slot">Reservation time:</label>
-              <select id="reservation_slot">
+              <select id="reservation_slot" name='reservation_slot'>
                 <option value="0" disabled>Select time</option>
               </select>
             </p>
-            <button type="button" id="button">Reserve</button>
+            <button type="submit" id="button">Reserve</button>
           </form>
       </div>
-      <!--End col-->
-
-      <!--Begin col-->
       <div class="column">
         <h2>Bookings For <span id="today"></span></h2>
         <div id="bookings">
         </div>
       </div>
-      <!--End col-->
     </div>
-    <!--End row-->
-
-
-
-
   </article>
 </section>
+
 <script>
-
-  const date = new Date();
-  document.getElementById('reservation_date').value = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate().toString().padStart(2, "0")}`;
-
-  console.log(document.getElementById('reservation_date').value);
-  getBookings();
-
-
-  /*  Step 10: Part two */
-  document.getElementById('reservation_date').addEventListener('change', () => getBookings());
-
-
   function getBookings() {
-    let reserved_slots = [];
-    const res_date = document.getElementById('reservation_date').value;
-    document.getElementById('today').innerHTML = res_date;
+    let   reservedSlots = [];
+    const resDate       = document.getElementById('reservation_date').value;
+    document.getElementById('today').innerHTML = resDate;
 
-    url = "{% url 'littlelemon-api:bookings' %}" + '/' + res_date;
-    console.log(url);
-    fetch(url)
-      .then(r => r.json())
-      .then(data => {
-        reserved_slots = [];
-        bookings = '';
-//
-        /* Step 11: Part three */
-        for (let x = 0; x < data.length; x++) {
-          const item = data[x];
-          console.log(item.fields);
-          reserved_slots.push(item.fields.reservation_slot);
-          bookings += `<p>${item.fields.name} - ${formatTime(item.fields.reservation_slot)}</p>`;
+    fetch("{% url 'littlelemon-api:bookings' %}" + '/' + resDate)
+    .then(r => {
+      if (r.status === 204) {
+        r = [];
+        return r;
+      }
+      if (!r.ok) {
+        console.log(`Server error: [${r.status}] [${r.statusText}] [${r.url}]`);
+        throw `Server error: [${r.status}] [${r.statusText}] [${r.url}]`;
+      }
+      return r.json();
+    })
+    .then(data => {
+      let   bookings      = '';
+      const reservedSlots = [];
+
+      for (let x = 0; x < data.length; x++) {
+        const item = data[x];
+        reservedSlots.push(item.reservation_slot);
+        bookings += `<p>${item.name} - ${formatTime(item.reservation_slot)}</p>`;
+      }
+
+      if (bookings === '') {
+        bookings = "No bookings";
+      }
+      document.getElementById('bookings').innerHTML = bookings;
+
+      //Time Slot Options
+      let slotOptions = '<option value="0" disabled>Select time</option>';
+      for (let i = 10; i <= 20; i++) {
+        const label = formatTime(i);
+        if (reservedSlots.includes(i)) {
+          slotOptions += `<option value=${i} disabled>${label}</option>`;
         }
-//
-//
-        /* Step 12: Part four  */
-        let slot_options = '<option value="0" disabled>Select time</option>';
-        for (let i = 11; i < 20; i++) {
-          const label = formatTime(i);
-          if (reserved_slots.includes(i)) {
-            slot_options += `<option value=${i} disabled>${label}</option>`;
-          }
-          else {
-            slot_options += `<option value=${i}>${label}</option>`;
-          }
+        else {
+          slotOptions += `<option value=${i}>${label}</option>`;
         }
-//
-        document.getElementById('reservation_slot').innerHTML = slot_options
-        if(bookings==''){
-          bookings = "No bookings";
-        }
-        document.getElementById('bookings').innerHTML = bookings;
-      })
+      }
+      document.getElementById('reservation_slot').innerHTML = slotOptions;
+    })
+    .catch(err => {
+      console.debug("Error in fetch", err);
+    });
   }
 
   function formatTime(time) {
@@ -113,20 +114,26 @@
     return label;
   }
 
+  const date            = new Date();
+  const reservationDate = document.getElementById('reservation_date');
 
-  document.getElementById('button').addEventListener('click', function (e) {
-    const formdata = {
-      name:             document.getElementById('name').value,
-      no_of_guests:     document.getElementById('no_of_guests').value,
-      reservation_date: document.getElementById('reservation_date').value,
-      reservation_slot: document.getElementById('reservation_slot').value
-    };
+  reservationDate.value = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+  reservationDate.addEventListener('change', () => getBookings());
 
-    fetch("{% url 'littlelemon-api:bookings' %}", { method: 'post', body: JSON.stringify(formdata) })
-      .then(r => r.text())
-      .then(data => {
-        getBookings()
-      });
+  getBookings();
+
+  document.getElementById('form').addEventListener("submit", function (e) {
+    // on form submission, prevent default
+    e.preventDefault();
+
+    fetch(
+      this.action
+    , { method: 'post', body: new FormData(this) }
+    )
+    .then(r    => r.text())
+    .then(data => {
+      getBookings();
+    });
   });
 </script>
 {% endblock %}

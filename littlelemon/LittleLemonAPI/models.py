@@ -26,9 +26,9 @@ class MenuItem(models.Model):
 
 class Booking(models.Model):
     name             = models.CharField(max_length=200)
-    no_of_guests     = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(999999)])
+    no_of_guests     = models.IntegerField()
     reservation_date = models.DateField()
-    reservation_slot = models.SmallIntegerField(default=10)
+    reservation_slot = models.IntegerField()
 
     class Meta:
       unique_together = ('name', 'reservation_date')
